@@ -1,8 +1,9 @@
 def main():
-    print("HalloWorld LOL")
+    print("HalloWorld new version")
     input("Enter to exit")
 
 
 if __name__=="__main__":
 
     main()
+
