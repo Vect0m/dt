@@ -2,13 +2,24 @@ import csv, os, pyautogui, time
 from win32gui import FindWindow, GetWindowRect
 import logging
 from datetime import datetime
+import tkinter as tk
+from tkinter import *
+import os
+import pyautogui
+from pynput import keyboard
+import pygetwindow as gw
+from pynput.keyboard import Controller, Key
+from time import sleep
+import subprocess
+import threading
+
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename="dtexe.log", encoding='utf-8', level=logging.DEBUG)
 # pyinstaller DTEXEV2.py --onefile -n ""
 
-# GLOBALS
+# GLOBALS Login
 csv_file = "usr_list.csv"
 config_file = "config.csv"
 user_list = []
@@ -27,6 +38,19 @@ start_x = 177
 start_y = 513
 
 
+# Globals Hopper
+WINDOW_TITLE = "Old Metin2" 
+writer_keyboard = Controller()
+sleep_time = 0.1
+
+ch_selec_y = 60
+
+ok_x_ch = -50
+ok_y_ch = +85
+
+paused = False
+
+#login part
 def imp_conf():
     channel_x = 0
     channel_y = 0
@@ -121,7 +145,7 @@ def login(username, password, channel_x, channel_y):
         pyautogui.click(duration = 0.1, button='left')
         time.sleep(0.5)
 
-def main():
+def login_main():
     logger.info(f'Start Time: {datetime.now()}')
     counter = 0
     import_user_csv()
@@ -140,5 +164,151 @@ def main():
     logger.info(f'End Time: {datetime.now()}')
 
 
+# hopper part
+def start_channel_switcher(
+    window_title="Old Metin2",
+    sleep_time=0.1,
+    ch_selec_y=60,
+    ok_x_ch=-50,
+    ok_y_ch=85
+):
+    writer_keyboard = Controller()
+    paused = False
+
+    def get_current_window():
+        windows = gw.getWindowsWithTitle(window_title)
+        if not windows:
+            print("Window not found")
+            return None
+        return windows[0]
+
+    def jump2(x, y):
+        win = get_current_window()
+        if not win:
+            return
+
+        x_center = (win.width / 2) + win.left
+        y_center = (win.height / 2) + win.top
+
+        # Open menu
+        writer_keyboard.press(Key.esc)
+        sleep(0.1)
+        writer_keyboard.release(Key.esc)
+        sleep(0.2)
+
+        # Select channel change
+        pyautogui.moveTo(x_center, y_center + ch_selec_y)
+        pyautogui.click(duration=0.1, button="left")
+        sleep(sleep_time)
+
+        # Select channel
+        pyautogui.moveTo(x_center + x, y_center + y)
+        pyautogui.click(duration=0.1, button="left")
+        sleep(sleep_time)
+
+        # Press OK
+        pyautogui.moveTo(x_center + ok_x_ch, y_center + ok_y_ch)
+        pyautogui.click(duration=0.1, button="left")
+        sleep(sleep_time)
+
+    def hopp2(ch):
+        channel_offsets = {
+            1: (0, -30),
+            2: (0, 0),
+            3: (0, 30),
+            4: (0, 60),
+        }
+        if ch in channel_offsets:
+            jump2(*channel_offsets[ch])
+
+    def on_press(key):
+        nonlocal paused
+        try:
+            if key.char == 'p':
+                paused = not paused
+                print("Paused!" if paused else "Resumed!")
+                return
+
+            if paused:
+                return
+
+            if key.char == '.':
+                win = get_current_window()
+                if win:
+                    print("Title:", win.title)
+                    print("Position (x, y):", win.left, win.top)
+                    print("Size (width, height):", win.width, win.height)
+                x, y = pyautogui.position()
+                print(f"MOUSEPOS: x {x}, y {y}")
+
+            elif key.char == "5":
+                print("CH1")
+                hopp2(1)
+            elif key.char == "6":
+                print("CH2")
+                hopp2(2)
+            elif key.char == "7":
+                print("CH3")
+                hopp2(3)
+            elif key.char == "8":
+                print("CH4")
+                hopp2(4)
+            elif key.char == 'k':
+                print("Quitting program...")
+                return False
+
+        except AttributeError:
+            pass
+
+    print("Listening for keys... (press 'k' to quit and 'p' to pause)")
+    print("Ch1 - 5\nCh2 - 6\nCh3 - 7\nCh4 - 8")
+
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+
+    return listener
+
+
+
+
+
+class ScriptGui:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("DT Helper")
+        self.hopp_process = None
+        self.loging_proccess = None
+        self.config_process = None
+        self.usr_process = None
+        tk.Button(root, text="Start Hopper", command=self.start_hopp).pack(pady=5)
+        tk.Button(root, text="Start Login", command=self.start_login).pack(pady=5)
+        tk.Button(root, text="Open Config", command=self.open_config).pack(pady=5)
+        tk.Button(root, text="Open Userlist", command=self.open_usr_list).pack(pady=5)
+
+
+        
+    
+    def start_hopp(self):
+        threading.Thread(target=start_channel_switcher, daemon=True).start()
+    
+    def start_login(self):
+        if self.loging_proccess is None or self.loging_proccess.poll() is not None:
+            self.loging_proccess = subprocess.Popen([login_main()])
+
+
+    def open_config(self):
+        if self.config_process is None or self.config_process.poll() is not None:
+            self.config_process = subprocess.Popen([os.system("notepad.exe " + config_file)])
+    
+    def open_usr_list(self):
+        if self.usr_process is None or self.usr_process.poll() is not None:
+            self.usr_process= subprocess.Popen([os.system("notepad.exe " + csv_file)])
+    
+
+
 if __name__ == "__main__":
-    main()
+    root = tk.Tk()
+    root.maxsize(400, 200)
+    root.geometry("300x150")
+    app = ScriptGui(root)
+    root.mainloop()
