@@ -1,0 +1,11 @@
+AutoPatcher:
+  1. Adjust PyInstaller (--windowoed)
+  2. if no usr_list & config present, download dummy
+
+DTEXE
+  1. Console Output within GUI (Tool Outputs)
+  2. Hopper
+  2.1 add jump to char selection screen
+  2.2 potential config file for setting own keys (or use present config file)
+  3. Login
+  3.1 initial delay (add time for login to start correctly)
