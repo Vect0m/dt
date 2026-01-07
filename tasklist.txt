@@ -1,11 +1,12 @@
 AutoPatcher:
   1. Adjust PyInstaller (--windowoed)
   2. if no usr_list & config present, download dummy
+  3. make git private + add token for download
 
 DTEXE
   1. General
   1.1 Console Output within GUI (Tool Outputs)
-  1.2 Add Login for more functions
+  1.2 Add Login for more functionn
   2. Hopper
   2.1 add jump to char selection screen
   2.2 potential config file for setting own keys (or use present config file)
