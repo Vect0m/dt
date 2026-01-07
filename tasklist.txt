@@ -3,7 +3,9 @@ AutoPatcher:
   2. if no usr_list & config present, download dummy
 
 DTEXE
-  1. Console Output within GUI (Tool Outputs)
+  1. General
+  1.1 Console Output within GUI (Tool Outputs)
+  1.2 Add Login for more functions
   2. Hopper
   2.1 add jump to char selection screen
   2.2 potential config file for setting own keys (or use present config file)
