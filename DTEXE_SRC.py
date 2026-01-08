@@ -167,7 +167,7 @@ def login_main():
 # hopper part
 def start_channel_switcher(
     window_title="Old Metin2",
-    sleep_time=0.1,
+    sleep_time=0.025,
     ch_selec_y=60,
     ok_x_ch=-50,
     ok_y_ch=85
@@ -189,7 +189,7 @@ def start_channel_switcher(
 
         x_center = (win.width / 2) + win.left
         y_center = (win.height / 2) + win.top
-
+        old_x, old_y = pyautogui.position()
         # Open menu
         writer_keyboard.press(Key.esc)
         sleep(0.1)
@@ -209,6 +209,7 @@ def start_channel_switcher(
         # Press OK
         pyautogui.moveTo(x_center + ok_x_ch, y_center + ok_y_ch)
         pyautogui.click(duration=0.1, button="left")
+        pyautogui.moveTo(old_x, old_y)
         sleep(sleep_time)
 
     def hopp2(ch):
