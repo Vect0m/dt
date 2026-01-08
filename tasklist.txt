@@ -2,7 +2,7 @@ AutoPatcher:
   1. Adjust PyInstaller (--windowoed)
   2. if no usr_list & config present, download dummy
   3. make git private + add token for download
-	4. add os.sysfem get python and pyinstaller if not there
+  4. add os.sysfem get python and pyinstaller if not there (winget install -e --id Python.Python.3.11 + pip install pyinstaller)
 DTEXE
   1. General
   1.1 Console Output within GUI (Tool Outputs)
