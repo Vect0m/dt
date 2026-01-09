@@ -3,15 +3,18 @@ from win32gui import FindWindow, GetWindowRect
 import logging
 from datetime import datetime
 import tkinter as tk
+from tkinter.scrolledtext import ScrolledText
 from tkinter import *
 import os
-import pyautogui
 from pynput import keyboard
 import pygetwindow as gw
 from pynput.keyboard import Controller, Key
 from time import sleep
 import subprocess
 import threading
+import queue
+import time
+import sys
 
 
 
@@ -146,6 +149,7 @@ def login(username, password, channel_x, channel_y):
         time.sleep(0.5)
 
 def login_main():
+    print(f"\n\n\n\n\n\n\n\n\n\n\n")
     logger.info(f'Start Time: {datetime.now()}')
     counter = 0
     import_user_csv()
@@ -162,7 +166,6 @@ def login_main():
         time.sleep(0.5)
     logger.info(f"Logged in {counter} accounts")
     logger.info(f'End Time: {datetime.now()}')
-
 
 # hopper part
 def start_channel_switcher(
@@ -260,7 +263,7 @@ def start_channel_switcher(
 
         except AttributeError:
             pass
-
+    print(f"\n\n\n\n\n\n")
     print("Listening for keys... (press 'k' to quit and 'p' to pause)")
     print("Ch1 - 5\nCh2 - 6\nCh3 - 7\nCh4 - 8")
 
@@ -269,9 +272,17 @@ def start_channel_switcher(
 
     return listener
 
+class StdoutRedirector:
+    def __init__(self, text_widget, log_queue):
+        self.text_widget = text_widget
+        self.queue = log_queue
 
+    def write(self, message):
+        if message.strip():
+            self.queue.put(message)
 
-
+    def flush(self):
+        pass
 
 class ScriptGui:
     def __init__(self, root):
@@ -286,16 +297,30 @@ class ScriptGui:
         tk.Button(root, text="Open Config", command=self.open_config).pack(pady=5)
         tk.Button(root, text="Open Userlist", command=self.open_usr_list).pack(pady=5)
 
+        self.log_queue = queue.Queue()
+        self.text_area = ScrolledText(root, state="disabled")
+        self.text_area.pack(fill="both", expand=True)
+        sys.stdout = StdoutRedirector(self.text_area, self.log_queue)
+        sys.stderr = StdoutRedirector(self.text_area, self.log_queue)
 
-        
+        self.root.after(100, self.process_log_queue)
     
+    def process_log_queue(self):
+        while not self.log_queue.empty():
+            msg = self.log_queue.get()
+            self.text_area.configure(state="normal")
+            self.text_area.insert(tk.END, msg + "\n")
+            self.text_area.configure(state="disabled")
+            self.text_area.yview(tk.END)
+        self.root.after(100, self.process_log_queue)
+
+
     def start_hopp(self):
         threading.Thread(target=start_channel_switcher, daemon=True).start()
     
     def start_login(self):
         if self.loging_proccess is None or self.loging_proccess.poll() is not None:
             self.loging_proccess = subprocess.Popen([login_main()])
-
 
     def open_config(self):
         if self.config_process is None or self.config_process.poll() is not None:
@@ -304,12 +329,9 @@ class ScriptGui:
     def open_usr_list(self):
         if self.usr_process is None or self.usr_process.poll() is not None:
             self.usr_process= subprocess.Popen([os.system("notepad.exe " + csv_file)])
-    
-
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.maxsize(400, 200)
-    root.geometry("300x150")
+    root.geometry("600x400")
     app = ScriptGui(root)
     root.mainloop()
